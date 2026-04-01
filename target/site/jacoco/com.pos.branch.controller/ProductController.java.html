@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">branch-server</a> &gt; <a href="index.source.html" class="el_package">com.pos.branch.controller</a> &gt; <span class="el_source">ProductController.java</span></div><h1>ProductController.java</h1><pre class="source lang-java linenums">package com.pos.branch.controller;
+
+import com.pos.branch.dto.ProductResponse;
+import com.pos.branch.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+
+@RestController
+@RequestMapping(&quot;/api/products&quot;)
+@Tag(name = &quot;Product&quot;, description = &quot;Product Management Endpoints&quot;)
+public class ProductController {
+
+    private final ProductService productService;
+
+<span class="nc" id="L22">    public ProductController(ProductService productService) {</span>
+<span class="nc" id="L23">        this.productService = productService;</span>
+<span class="nc" id="L24">    }</span>
+
+    @GetMapping(&quot;/{barcode}&quot;)
+    @Operation(summary = &quot;Get product by barcode&quot;, description = &quot;Looks up a product using its unique barcode string&quot;)
+    @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Product found&quot;)
+    @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Product not found&quot;)
+    public ResponseEntity&lt;ProductResponse&gt; getProductByBarcode(@PathVariable String barcode) {
+<span class="nc" id="L31">        return ResponseEntity.ok(productService.getProductByBarcode(barcode));</span>
+    }
+
+    @GetMapping(&quot;/search&quot;)
+    @Operation(summary = &quot;Search products&quot;, description = &quot;Search products by name and optionally filter by category&quot;)
+    public ResponseEntity&lt;Page&lt;ProductResponse&gt;&gt; searchProducts(
+            @RequestParam String query,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size) {
+<span class="nc" id="L41">        return ResponseEntity.ok(productService.searchProducts(query, category, PageRequest.of(page, size)));</span>
+    }
+
+    @PutMapping(&quot;/{id}/price&quot;)
+    @Operation(summary = &quot;Update product price&quot;, description = &quot;Updates a product's price and notifies observers&quot;)
+    public ResponseEntity&lt;Void&gt; updatePrice(@PathVariable Integer id, @RequestParam BigDecimal price) {
+<span class="nc" id="L47">        productService.updateProductPrice(id, price);</span>
+<span class="nc" id="L48">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

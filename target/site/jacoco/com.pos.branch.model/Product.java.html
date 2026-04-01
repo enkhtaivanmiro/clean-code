@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Product.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">branch-server</a> &gt; <a href="index.source.html" class="el_package">com.pos.branch.model</a> &gt; <span class="el_source">Product.java</span></div><h1>Product.java</h1><pre class="source lang-java linenums">package com.pos.branch.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = &quot;product&quot;)
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = &quot;category_id&quot;, nullable = false)
+    private Category category;
+
+<span class="fc" id="L21">    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)</span>
+<span class="fc" id="L22">    private LocalDateTime createdAt = LocalDateTime.now();</span>
+
+<span class="fc" id="L24">    @Column(name = &quot;updated_at&quot;, nullable = false)</span>
+<span class="fc" id="L25">    private LocalDateTime updatedAt = LocalDateTime.now();</span>
+
+<span class="fc" id="L27">    @Column(nullable = false)</span>
+<span class="fc" id="L28">    private Boolean active = true;</span>
+
+    @OneToMany(mappedBy = &quot;product&quot;)
+    private List&lt;Barcode&gt; barcodes;
+
+    @OneToMany(mappedBy = &quot;product&quot;)
+    private List&lt;ProductPrice&gt; prices;
+
+<span class="fc" id="L36">    public Product() {}</span>
+
+<span class="fc" id="L38">    public Integer getId() { return id; }</span>
+<span class="fc" id="L39">    public void setId(Integer id) { this.id = id; }</span>
+<span class="fc" id="L40">    public String getName() { return name; }</span>
+<span class="fc" id="L41">    public void setName(String name) { this.name = name; }</span>
+<span class="fc" id="L42">    public Category getCategory() { return category; }</span>
+<span class="fc" id="L43">    public void setCategory(Category category) { this.category = category; }</span>
+<span class="nc" id="L44">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="nc" id="L45">    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
+<span class="nc" id="L46">    public LocalDateTime getUpdatedAt() { return updatedAt; }</span>
+<span class="nc" id="L47">    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }</span>
+<span class="nc" id="L48">    public Boolean getActive() { return active; }</span>
+<span class="nc" id="L49">    public void setActive(Boolean active) { this.active = active; }</span>
+<span class="fc" id="L50">    public List&lt;Barcode&gt; getBarcodes() { return barcodes; }</span>
+<span class="fc" id="L51">    public void setBarcodes(List&lt;Barcode&gt; barcodes) { this.barcodes = barcodes; }</span>
+<span class="nc" id="L52">    public List&lt;ProductPrice&gt; getPrices() { return prices; }</span>
+<span class="nc" id="L53">    public void setPrices(List&lt;ProductPrice&gt; prices) { this.prices = prices; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

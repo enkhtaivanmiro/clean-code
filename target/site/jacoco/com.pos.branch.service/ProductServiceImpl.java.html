@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">branch-server</a> &gt; <a href="index.source.html" class="el_package">com.pos.branch.service</a> &gt; <span class="el_source">ProductServiceImpl.java</span></div><h1>ProductServiceImpl.java</h1><pre class="source lang-java linenums">package com.pos.branch.service;
+
+import com.pos.branch.dto.ProductResponse;
+import com.pos.branch.exception.ProductNotFoundException;
+import com.pos.branch.model.Barcode;
+import com.pos.branch.model.Product;
+import com.pos.branch.model.ProductPrice;
+import com.pos.branch.pattern.observer.PriceChangeEvent;
+import com.pos.branch.pattern.observer.PriceChangePublisher;
+import com.pos.branch.repository.BarcodeRepository;
+import com.pos.branch.repository.ProductPriceRepository;
+import com.pos.branch.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Service
+public class ProductServiceImpl implements ProductService {
+
+    private final ProductRepository productRepository;
+    private final BarcodeRepository barcodeRepository;
+    private final ProductPriceRepository productPriceRepository;
+    private final PriceChangePublisher priceChangePublisher;
+
+    public ProductServiceImpl(ProductRepository productRepository, 
+                              BarcodeRepository barcodeRepository, 
+                              ProductPriceRepository productPriceRepository,
+<span class="fc" id="L32">                              PriceChangePublisher priceChangePublisher) {</span>
+<span class="fc" id="L33">        this.productRepository = productRepository;</span>
+<span class="fc" id="L34">        this.barcodeRepository = barcodeRepository;</span>
+<span class="fc" id="L35">        this.productPriceRepository = productPriceRepository;</span>
+<span class="fc" id="L36">        this.priceChangePublisher = priceChangePublisher;</span>
+<span class="fc" id="L37">    }</span>
+
+    @Override
+    public ProductResponse getProductByBarcode(String barcodeCode) {
+<span class="fc" id="L41">        Barcode barcode = barcodeRepository.findByCode(barcodeCode)</span>
+<span class="fc" id="L42">                .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found for barcode: &quot; + barcodeCode));</span>
+<span class="fc" id="L43">        Product product = barcode.getProduct();</span>
+<span class="fc" id="L44">        BigDecimal price = getLatestPrice(product.getId());</span>
+<span class="fc" id="L45">        return mapToResponse(product, barcodeCode, price);</span>
+    }
+
+    @Override
+    public Page&lt;ProductResponse&gt; searchProducts(String query, String category, Pageable pageable) {
+<span class="nc" id="L50">        return productRepository.searchProducts(query, category, pageable)</span>
+<span class="nc" id="L51">                .map(p -&gt; {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                    String barcode = p.getBarcodes().isEmpty() ? null : p.getBarcodes().get(0).getCode();</span>
+<span class="nc" id="L53">                    return mapToResponse(p, barcode, getLatestPrice(p.getId()));</span>
+                });
+    }
+
+    @Override
+    @Transactional
+    public void updateProductPrice(Integer productId, BigDecimal newPrice) {
+<span class="nc" id="L60">        Product product = productRepository.findById(productId)</span>
+<span class="nc" id="L61">                .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found: &quot; + productId));</span>
+        
+<span class="nc" id="L63">        BigDecimal oldPrice = getLatestPrice(productId);</span>
+        
+<span class="nc" id="L65">        ProductPrice productPrice = new ProductPrice();</span>
+<span class="nc" id="L66">        productPrice.setProduct(product);</span>
+<span class="nc" id="L67">        productPrice.setPrice(newPrice);</span>
+<span class="nc" id="L68">        productPrice.setUpdatedAt(LocalDateTime.now());</span>
+<span class="nc" id="L69">        productPriceRepository.save(productPrice);</span>
+        
+<span class="nc" id="L71">        priceChangePublisher.notifyObservers(new PriceChangeEvent(productId, oldPrice, newPrice, LocalDateTime.now()));</span>
+<span class="nc" id="L72">    }</span>
+
+    private BigDecimal getLatestPrice(Integer productId) {
+<span class="fc" id="L75">        return productPriceRepository.findLatestByProductId(productId)</span>
+<span class="fc" id="L76">                .map(ProductPrice::getPrice)</span>
+<span class="fc" id="L77">                .orElse(BigDecimal.ZERO);</span>
+    }
+
+    private ProductResponse mapToResponse(Product p, String barcode, BigDecimal price) {
+<span class="fc" id="L81">        return new ProductResponse(p.getId(), p.getName(), barcode, price, p.getCategory().getName());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
