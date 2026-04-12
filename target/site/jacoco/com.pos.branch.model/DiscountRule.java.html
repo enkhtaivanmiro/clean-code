@@ -16,8 +16,8 @@ public class DiscountRule {
     @Column(nullable = false, length = 20)
     private String type; // PERCENT or FIXED
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal value;
+    @Column(name = &quot;discount_value&quot;, nullable = false, precision = 12, scale = 2)
+    private BigDecimal discountValue;
 
 <span class="fc" id="L22">    @Column(nullable = false)</span>
 <span class="fc" id="L23">    private Boolean active = true;</span>
@@ -30,9 +30,9 @@ public class DiscountRule {
 <span class="fc" id="L30">    public void setName(String name) { this.name = name; }</span>
 <span class="fc" id="L31">    public String getType() { return type; }</span>
 <span class="fc" id="L32">    public void setType(String type) { this.type = type; }</span>
-<span class="fc" id="L33">    public BigDecimal getValue() { return value; }</span>
-<span class="fc" id="L34">    public void setValue(BigDecimal value) { this.value = value; }</span>
+<span class="fc" id="L33">    public BigDecimal getDiscountValue() { return discountValue; }</span>
+<span class="fc" id="L34">    public void setDiscountValue(BigDecimal discountValue) { this.discountValue = discountValue; }</span>
 <span class="fc" id="L35">    public Boolean getActive() { return active; }</span>
 <span class="fc" id="L36">    public void setActive(Boolean active) { this.active = active; }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

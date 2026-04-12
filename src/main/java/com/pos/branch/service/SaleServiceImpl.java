@@ -80,7 +80,7 @@ public class SaleServiceImpl implements SaleService {
         List<SaleItem> items = new ArrayList<>();
         for (SaleItemRequest itemReq : request.items()) {
             // Pessimistic inventory lock
-            Inventory inventory = inventoryRepository.findByBranchIdAndProductId(branch.getId(), itemReq.product_id())
+            Inventory inventory = inventoryRepository.findWithLock(branch.getId(), itemReq.product_id())
                     .orElseThrow(() -> new ProductNotFoundException("Product not found in this branch inventory: " + itemReq.product_id()));
 
             if (inventory.getQuantity() < itemReq.quantity()) {

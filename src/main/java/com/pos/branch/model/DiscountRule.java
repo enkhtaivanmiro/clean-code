@@ -16,8 +16,8 @@ public class DiscountRule {
     @Column(nullable = false, length = 20)
     private String type; // PERCENT or FIXED
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal value;
+    @Column(name = "discount_value", nullable = false, precision = 12, scale = 2)
+    private BigDecimal discountValue;
 
     @Column(nullable = false)
     private Boolean active = true;
@@ -30,8 +30,8 @@ public class DiscountRule {
     public void setName(String name) { this.name = name; }
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
-    public BigDecimal getValue() { return value; }
-    public void setValue(BigDecimal value) { this.value = value; }
+    public BigDecimal getDiscountValue() { return discountValue; }
+    public void setDiscountValue(BigDecimal discountValue) { this.discountValue = discountValue; }
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
 }

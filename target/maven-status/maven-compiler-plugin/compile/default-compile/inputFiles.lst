@@ -9,6 +9,7 @@
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/repository/BranchRepository.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/repository/CategoryRepository.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/model/DiscountRule.java
+/Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/controller/CentralSyncController.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/repository/DiscountRuleRepository.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/model/PaymentType.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/controller/SyncController.java

@@ -18,6 +18,7 @@ com/pos/branch/BranchServerApplication.class
 com/pos/branch/model/Barcode.class
 com/pos/branch/pattern/strategy/PaymentResult.class
 com/pos/branch/pattern/strategy/PaymentStrategyFactory.class
+com/pos/branch/controller/CentralSyncController.class
 com/pos/branch/model/SaleItem.class
 com/pos/branch/repository/InventoryRepository.class
 com/pos/branch/exception/DuplicateSaleException.class

@@ -7,17 +7,17 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.util.concurrent.Executor;
 
 @Configuration
-<span class="nc" id="L10">public class ThreadPoolConfig {</span>
+<span class="fc" id="L10">public class ThreadPoolConfig {</span>
 
     @Bean(name = &quot;syncTaskExecutor&quot;)
     public Executor syncTaskExecutor() {
-<span class="nc" id="L14">        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();</span>
-<span class="nc" id="L15">        executor.setCorePoolSize(10);</span>
-<span class="nc" id="L16">        executor.setMaxPoolSize(25);</span>
-<span class="nc" id="L17">        executor.setQueueCapacity(50);</span>
-<span class="nc" id="L18">        executor.setThreadNamePrefix(&quot;SyncThread-&quot;);</span>
-<span class="nc" id="L19">        executor.initialize();</span>
-<span class="nc" id="L20">        return executor;</span>
+<span class="fc" id="L14">        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();</span>
+<span class="fc" id="L15">        executor.setCorePoolSize(10);</span>
+<span class="fc" id="L16">        executor.setMaxPoolSize(25);</span>
+<span class="fc" id="L17">        executor.setQueueCapacity(50);</span>
+<span class="fc" id="L18">        executor.setThreadNamePrefix(&quot;SyncThread-&quot;);</span>
+<span class="fc" id="L19">        executor.initialize();</span>
+<span class="fc" id="L20">        return executor;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

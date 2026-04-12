@@ -11,5 +11,7 @@ import java.util.Optional;
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Inventory i WHERE i.branch.id = :branchId AND i.product.id = :productId")
-    Optional<Inventory> findByBranchIdAndProductId(@Param("branchId") Integer branchId, @Param("productId") Integer productId);
+    Optional<Inventory> findWithLock(@Param("branchId") Integer branchId, @Param("productId") Integer productId);
+
+    Optional<Inventory> findByBranchIdAndProductId(Integer branchId, Integer productId);
 }

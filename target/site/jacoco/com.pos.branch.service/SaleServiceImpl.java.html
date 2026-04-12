@@ -80,8 +80,8 @@ public class SaleServiceImpl implements SaleService {
 <span class="fc" id="L80">        List&lt;SaleItem&gt; items = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L81" title="All 2 branches covered.">        for (SaleItemRequest itemReq : request.items()) {</span>
             // Pessimistic inventory lock
-<span class="fc" id="L83">            Inventory inventory = inventoryRepository.findByBranchIdAndProductId(branch.getId(), itemReq.product_id())</span>
-<span class="pc" id="L84">                    .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found in this branch inventory: &quot; + itemReq.product_id()));</span>
+<span class="fc" id="L83">            Inventory inventory = inventoryRepository.findWithLock(branch.getId(), itemReq.product_id())</span>
+<span class="fc" id="L84">                    .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found in this branch inventory: &quot; + itemReq.product_id()));</span>
 
 <span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if (inventory.getQuantity() &lt; itemReq.quantity()) {</span>
 <span class="nc" id="L87">                throw new InsufficientStockException(&quot;Insufficient stock for product: &quot; + itemReq.product_id());</span>
@@ -101,9 +101,9 @@ public class SaleServiceImpl implements SaleService {
 <span class="fc" id="L101">            item.setPrice(itemReq.price());</span>
 <span class="fc" id="L102">            item.setDiscountAmount(itemReq.discount_amount());</span>
 
-<span class="pc bpc" id="L104" title="1 of 2 branches missed.">            if (itemReq.discount_rule_id() != null) {</span>
-<span class="nc" id="L105">                DiscountRule rule = discountRuleRepository.findById(itemReq.discount_rule_id())</span>
-<span class="nc" id="L106">                        .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Invalid discount rule ID&quot;));</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (itemReq.discount_rule_id() != null) {</span>
+<span class="fc" id="L105">                DiscountRule rule = discountRuleRepository.findById(itemReq.discount_rule_id())</span>
+<span class="pc" id="L106">                        .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Invalid discount rule ID&quot;));</span>
 <span class="nc" id="L107">                item.setDiscountRule(rule);</span>
             }
 <span class="fc" id="L109">            items.add(item);</span>
@@ -125,4 +125,4 @@ public class SaleServiceImpl implements SaleService {
 <span class="nc" id="L125">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Sale not found: &quot; + id));</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

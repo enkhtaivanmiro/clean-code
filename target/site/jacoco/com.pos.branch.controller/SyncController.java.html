@@ -17,9 +17,9 @@ public class SyncController {
 
     private final SyncService syncService;
 
-<span class="nc" id="L20">    public SyncController(SyncService syncService) {</span>
-<span class="nc" id="L21">        this.syncService = syncService;</span>
-<span class="nc" id="L22">    }</span>
+<span class="fc" id="L20">    public SyncController(SyncService syncService) {</span>
+<span class="fc" id="L21">        this.syncService = syncService;</span>
+<span class="fc" id="L22">    }</span>
 
     @PostMapping
     @Operation(summary = &quot;Sync branch sales&quot;, description = &quot;Asynchronously pushes unsynced sales data to the central server (simulated)&quot;)
@@ -28,4 +28,4 @@ public class SyncController {
 <span class="nc" id="L28">                .thenApply(ResponseEntity::ok);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

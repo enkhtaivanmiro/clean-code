@@ -5,6 +5,7 @@ com/pos/branch/pattern/observer/ObserverImplTest.class
 com/pos/branch/pattern/strategy/PaymentStrategyFactoryTest.class
 com/pos/branch/pattern/strategy/StrategyTest.class
 com/pos/branch/service/SaleServiceTest.class
+com/pos/branch/service/ConcurrencyIntegrationTest.class
 com/pos/branch/service/SyncServiceTest.class
 com/pos/branch/model/ModelTest.class
 com/pos/branch/exception/ExceptionTest.class

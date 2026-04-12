@@ -64,7 +64,7 @@ public class SaleServiceTest {
 
         Inventory inventory = new Inventory();
         inventory.setQuantity(10);
-        when(inventoryRepository.findByBranchIdAndProductId(any(), any())).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.findWithLock(any(), any())).thenReturn(Optional.of(inventory));
         when(productRepository.findById(1)).thenReturn(Optional.of(new Product()));
 
         PaymentStrategy strategy = mock(PaymentStrategy.class);

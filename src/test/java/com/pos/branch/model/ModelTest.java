@@ -97,12 +97,12 @@ public class ModelTest {
         d.setId(1);
         d.setName("D");
         d.setType("PERCENT");
-        d.setValue(BigDecimal.ONE);
+        d.setDiscountValue(BigDecimal.ONE);
         d.setActive(true);
         assertEquals(1, d.getId());
         assertEquals("D", d.getName());
         assertEquals("PERCENT", d.getType());
-        assertEquals(BigDecimal.ONE, d.getValue());
+        assertEquals(BigDecimal.ONE, d.getDiscountValue());
         assertTrue(d.getActive());
     }
 
