@@ -12,7 +12,10 @@ public class SaleItem {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "sale_id", nullable = false)
+    @JoinColumns({
+        @JoinColumn(name = "sale_id", referencedColumnName = "id", nullable = false),
+        @JoinColumn(name = "sale_created_at", referencedColumnName = "created_at", nullable = false)
+    })
     private Sale sale;
 
     @ManyToOne

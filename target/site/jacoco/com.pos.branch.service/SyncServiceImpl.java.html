@@ -33,7 +33,7 @@ public class SyncServiceImpl implements SyncService {
 <span class="fc bfc" id="L33" title="All 2 branches covered.">        for (SaleRequest saleReq : request.sales()) {</span>
 <span class="fc" id="L34">            UUID saleId = saleReq.id();</span>
             try {
-<span class="fc" id="L36">                Sale sale = saleRepository.findById(saleId).orElse(null);</span>
+<span class="fc" id="L36">                Sale sale = saleRepository.findByUuid(saleId).orElse(null);</span>
 <span class="pc bpc" id="L37" title="2 of 4 branches missed.">                if (sale != null &amp;&amp; !sale.getSynced()) {</span>
 <span class="fc" id="L38">                    sale.setSynced(true);</span>
 <span class="fc" id="L39">                    saleRepository.save(sale);</span>

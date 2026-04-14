@@ -3,7 +3,6 @@ package com.pos.branch.service;
 import com.pos.branch.dto.ProductResponse;
 import com.pos.branch.exception.ProductNotFoundException;
 import com.pos.branch.model.*;
-import com.pos.branch.pattern.observer.PriceChangePublisher;
 import com.pos.branch.repository.BarcodeRepository;
 import com.pos.branch.repository.ProductPriceRepository;
 import com.pos.branch.repository.ProductRepository;
@@ -13,9 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,14 +24,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
-    @Mock
-    private ProductRepository productRepository;
-    @Mock
-    private BarcodeRepository barcodeRepository;
-    @Mock
-    private ProductPriceRepository productPriceRepository;
-    @Mock
-    private PriceChangePublisher priceChangePublisher;
+    @Mock private ProductRepository productRepository;
+    @Mock private BarcodeRepository barcodeRepository;
+    @Mock private ProductPriceRepository productPriceRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -54,6 +49,7 @@ public class ProductServiceTest {
         barcode = new Barcode();
         barcode.setCode("1001");
         barcode.setProduct(product);
+        product.setBarcodes(java.util.Collections.singletonList(barcode));
     }
 
     @Test

@@ -6,7 +6,6 @@ import com.pos.branch.model.*;
 import com.pos.branch.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -26,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
     "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.sql.init.mode=never"
 })
 @ActiveProfiles("h2")
 public class ConcurrencyIntegrationTest {
@@ -35,7 +35,7 @@ public class ConcurrencyIntegrationTest {
     private SaleService saleService;
 
     @Autowired
-    private InventoryRepository inventoryRepository;
+    private SaleRepository saleRepository;
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -58,6 +58,13 @@ public class ConcurrencyIntegrationTest {
     @BeforeEach
     public void setup() {
         transactionTemplate.execute(status -> {
+            categoryRepository.deleteAll();
+            productRepository.deleteAll();
+            branchRepository.deleteAll();
+            posTerminalRepository.deleteAll();
+            paymentTypeRepository.deleteAll();
+            saleRepository.deleteAll();
+
             Category cat = new Category();
             cat.setName("Test Cat");
             cat = categoryRepository.save(cat);
@@ -82,12 +89,6 @@ public class ConcurrencyIntegrationTest {
             pt.setName("CASH");
             pt = paymentTypeRepository.save(pt);
             
-            Inventory inv = new Inventory();
-            inv.setBranch(branch);
-            inv.setProduct(prod);
-            inv.setQuantity(500);
-            inventoryRepository.save(inv);
-            
             productId = prod.getId();
             branchId = branch.getId();
             posTerminalId = pos.getId();
@@ -97,21 +98,19 @@ public class ConcurrencyIntegrationTest {
     }
 
     @Test
-    public void testConcurrentSalesDeduction() throws InterruptedException {
+    public void testConcurrentIdempotentSales() throws InterruptedException {
         int threadCount = 20;
-        int salesPerThread = 5;
-
-        // Inventory is already set to 500 in setup()
+        UUID duplicateSaleId = UUID.randomUUID();
 
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(threadCount * salesPerThread);
+        CountDownLatch latch = new CountDownLatch(threadCount);
         AtomicInteger successCount = new AtomicInteger(0);
 
-        for (int i = 0; i < threadCount * salesPerThread; i++) {
+        for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 try {
                     SaleRequest request = new SaleRequest(
-                            UUID.randomUUID(),
+                            duplicateSaleId,
                             branchId,
                             posTerminalId,
                             paymentTypeId,
@@ -121,7 +120,7 @@ public class ConcurrencyIntegrationTest {
                     saleService.createSale(request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
-                    System.err.println("Sale failed: " + e.getMessage());
+                    // One will succeed, others might throw Conflict or return OK depending on timing
                 } finally {
                     latch.countDown();
                 }
@@ -131,7 +130,7 @@ public class ConcurrencyIntegrationTest {
         latch.await();
         executor.shutdown();
 
-        var finalInventory = inventoryRepository.findByBranchIdAndProductId(branchId, productId).get();
-        assertEquals(500 - (threadCount * salesPerThread), finalInventory.getQuantity(), "Inventory should be correctly deducted despite concurrency");
+        long count = saleRepository.count();
+        assertEquals(1, count, "Only one sale should be created for same UUID despite concurrency");
     }
 }

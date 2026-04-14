@@ -4,6 +4,7 @@ import com.pos.branch.dto.SyncRequest;
 import com.pos.branch.dto.SyncResponse;
 import com.pos.branch.service.SyncService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +18,16 @@ public class SyncController {
 
     private final SyncService syncService;
 
-<span class="fc" id="L20">    public SyncController(SyncService syncService) {</span>
-<span class="fc" id="L21">        this.syncService = syncService;</span>
-<span class="fc" id="L22">    }</span>
+<span class="fc" id="L21">    public SyncController(SyncService syncService) {</span>
+<span class="fc" id="L22">        this.syncService = syncService;</span>
+<span class="fc" id="L23">    }</span>
 
     @PostMapping
     @Operation(summary = &quot;Sync branch sales&quot;, description = &quot;Asynchronously pushes unsynced sales data to the central server (simulated)&quot;)
+    @ApiResponse(responseCode = &quot;202&quot;, description = &quot;Sync operation accepted and started&quot;)
     public CompletableFuture&lt;ResponseEntity&lt;SyncResponse&gt;&gt; syncSales(@RequestBody SyncRequest request) {
-<span class="nc" id="L27">        return syncService.syncSales(request)</span>
-<span class="nc" id="L28">                .thenApply(ResponseEntity::ok);</span>
+<span class="nc" id="L29">        return syncService.syncSales(request)</span>
+<span class="nc" id="L30">                .thenApply(resp -&gt; ResponseEntity.accepted().body(resp));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

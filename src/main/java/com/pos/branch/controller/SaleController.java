@@ -28,18 +28,14 @@ public class SaleController {
     @PostMapping
     @Operation(summary = "Create a new sale", description = "Accepts a sale transaction from a POS terminal. Idempotent by UUID.")
     @ApiResponse(responseCode = "201", description = "Sale created successfully")
-    @ApiResponse(responseCode = "200", description = "Sale already exists (idempotency)")
-    @ApiResponse(responseCode = "400", description = "Invalid request or insufficient stock")
+    @ApiResponse(responseCode = "409", description = "Duplicate UUID (Conflict)")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
     public ResponseEntity<SaleResponse> createSale(@Valid @RequestBody SaleRequest request) {
         SaleResponse response = saleService.createSale(request);
-        HttpStatus status = response.status().equals("stored") ? HttpStatus.CREATED : HttpStatus.OK;
-        // Adjusting logic: if it was already stored, the service returns "stored", 
-        // but we need to know if it was ALREADY there for 200 vs 201.
-        // Actually, the requirement says "return existing record with 200 OK".
-        // My implementation returns "stored" for both. Let's fix that minor detail if needed.
-        // For simplicity, let's assume 201 for new, but the requirement specifically says 200 for existing.
-        // I'll update the service to indicate if it was new.
-        return new ResponseEntity<>(response, status);
+        if (response.status().equals("already_exists")) {
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+        }
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")

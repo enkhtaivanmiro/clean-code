@@ -154,20 +154,4 @@ public class ModelTest {
         assertEquals(p, i.getProduct());
         assertEquals(d, i.getDiscountRule());
     }
-
-    @Test
-    void testInventory() {
-        Inventory inv = new Inventory();
-        inv.setId(1);
-        inv.setQuantity(10);
-        Branch b = new Branch();
-        inv.setBranch(b);
-        Product p = new Product();
-        inv.setProduct(p);
-
-        assertEquals(1, inv.getId());
-        assertEquals(10, inv.getQuantity());
-        assertEquals(b, inv.getBranch());
-        assertEquals(p, inv.getProduct());
-    }
 }

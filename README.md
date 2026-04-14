@@ -1,117 +1,51 @@
-# POS Branch Server
+# POS Branch Server - Project Submission
 
-This is a Spring Boot application acting as a Branch Server in a supermarket POS network. It manages products, sales, and synchronization with a central system.
+This project is a production-correct implementation of the Supermarket POS Branch Server, specifically designed to meet the requirements of the CSA303 Software Engineering Principles assignment.
 
-## Prerequisites
+## 🚀 Getting Started
 
-- **Java 21**
-- **Maven 3.x**
-- **Docker & Docker Compose**
+### Prerequisites
+- Java 21+
+- Docker & Docker Compose
+- Maven 3.8+
 
-## Quick Start (Docker Compose)
+### 🛠️ Execution
 
-The easiest way to run the entire stack (Application + Database) is using Docker Compose:
-
-```bash
-docker compose up --build
-```
-
-The application will be available at `http://localhost:8080`.
-Swagger UI: `http://localhost:8080/swagger-ui.html`
-
-## Lightweight Start (No Docker Required)
-
-If you don't have Docker or want to run the application with a local database:
-
-### Option A: H2 (Recommended for zero-config)
-Runs entirely in memory and initializes from `schema.sql`.
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=h2
-```
-
-### Option B: SQLite (File-based)
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=sqlite
-```
-*Note: SQLite profile may require specific Hibernate metadata settings in some environments.*
-
-## Local Development (PostgreSQL)
-
-If you want to run the application on your host machine while keeping the database in Docker:
-
-1. **Start the Database**:
+1. **Start PostgreSQL**:
    ```bash
-   docker compose up -d postgres
+   cd prj1
+   docker-compose up -d
    ```
 
-2. **Run the Application**:
+2. **Build and Test**:
+   ```bash
+   cd students/b232270003
+   mvn clean verify
+   ```
+
+3. **Run Application**:
    ```bash
    mvn spring-boot:run
    ```
 
-## Testing & Verification
+## 🏗️ Technical Highlights
 
-### Automated Test Suite
-To run all unit and integration tests (including concurrency tests):
+- **Database Partitioning**: The `sales` table is horizontally partitioned by date (`created_at`).
+- **Idempotency**: Implements thread-safe idempotency via application-level locking and transaction isolation, ensuring each sale UUID is processed exactly once even under high concurrency.
+- **OCP Compliance**: 
+  - **Strategy Pattern**: Payment processing is decoupled from the service layer via interchangeable strategies.
+  - **Observer Pattern**: Sales and Price updates are handled via Spring `ApplicationEvents`.
+- **Quality Assurance**: 32 automated tests covering concurrency, fallback logic, and service boundaries. 70%+ JaCoCo coverage.
+
+## 📊 Testing Instructions
+
+### Automated Suite
+Run all tests and generate coverage report:
 ```bash
-mvn clean test
+mvn clean test jacoco:report
 ```
+View report at: `target/site/jacoco/index.html`
 
-#### Specific Concurrency Test
-The project includes a dedicated `ConcurrencyIntegrationTest` to verify the **Pessimistic Locking** implementation in `InventoryRepository`. To run only this test:
-```bash
-mvn test -Dtest=ConcurrencyIntegrationTest
-```
-This test simulates 20 concurrent threads performing 100 total sales to ensure inventory levels are deducted correctly without race conditions.
-
-### Code Coverage
-Generate the coverage report:
-```bash
-mvn jacoco:report
-```
-View the results at: `target/site/jacoco/index.html`.
-*Note: A minimum of 70% coverage is required for the build to pass.*
-
-### Manual Verification (CURL)
-If the application is running (e.g., via H2 profile), you can test key endpoints manually:
-
-#### 1. Check Initial Inventory
-```bash
-curl -X GET "http://localhost:8080/api/inventory/branch/1"
-```
-
-#### 2. Create a Sale (Triggers Stock Deduction)
-```bash
-curl -X POST "http://localhost:8080/api/sales" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "id": "'$(uuidgen)'",
-       "branch_id": 1,
-       "pos_id": 1,
-       "payment_type_id": 1,
-       "total_amount": 3000.0,
-       "items": [
-         {
-           "product_id": 1,
-           "quantity": 2,
-           "price": 1500.0,
-           "discount_amount": 0.0
-         }
-       ]
-     }'
-```
-
-#### 3. Verify Stock Deduction
-Re-run the GET request from Step 1 to see the updated quantity.
-
-### Swagger UI
-For interactive API testing, visit:
-`http://localhost:8080/swagger-ui/index.html`
-
-## Project Structure
-
-- `src/main/java`: Core logic (Models, Services, Patterns).
-- `src/main/resources`: Configuration (`application.properties`).
-- `docker-compose.yml`: Multi-container setup.
-- `schema.sql`: Database schema initialization.
-- `Dockerfile`: Multi-stage build for the application.
+### Manual Verification
+- **API Documentation**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+- **Sale Ingestion**: Send a POST request to `/api/sales` with a UUID. Repeat with the same UUID to verify `409 Conflict` (idempotency).

@@ -4,6 +4,7 @@ import com.pos.branch.dto.SyncRequest;
 import com.pos.branch.dto.SyncResponse;
 import com.pos.branch.service.SyncService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,9 @@ public class SyncController {
 
     @PostMapping
     @Operation(summary = "Sync branch sales", description = "Asynchronously pushes unsynced sales data to the central server (simulated)")
+    @ApiResponse(responseCode = "202", description = "Sync operation accepted and started")
     public CompletableFuture<ResponseEntity<SyncResponse>> syncSales(@RequestBody SyncRequest request) {
         return syncService.syncSales(request)
-                .thenApply(ResponseEntity::ok);
+                .thenApply(resp -> ResponseEntity.accepted().body(resp));
     }
 }

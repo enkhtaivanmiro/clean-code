@@ -3,126 +3,140 @@
 import com.pos.branch.dto.SaleItemRequest;
 import com.pos.branch.dto.SaleRequest;
 import com.pos.branch.dto.SaleResponse;
-import com.pos.branch.exception.InsufficientStockException;
+import com.pos.branch.event.SaleCreatedEvent;
 import com.pos.branch.exception.ProductNotFoundException;
 import com.pos.branch.model.*;
 import com.pos.branch.pattern.strategy.PaymentRequest;
 import com.pos.branch.pattern.strategy.PaymentStrategy;
 import com.pos.branch.pattern.strategy.PaymentStrategyFactory;
 import com.pos.branch.repository.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class SaleServiceImpl implements SaleService {
+<span class="fc" id="L25">    private static final Map&lt;UUID, Object&gt; saleLocks = new ConcurrentHashMap&lt;&gt;();</span>
 
     private final SaleRepository saleRepository;
     private final SaleItemRepository saleItemRepository;
     private final ProductRepository productRepository;
-    private final InventoryRepository inventoryRepository;
+    private final CategoryRepository categoryRepository;
     private final BranchRepository branchRepository;
     private final POSTerminalRepository posTerminalRepository;
     private final PaymentTypeRepository paymentTypeRepository;
     private final DiscountRuleRepository discountRuleRepository;
     private final PaymentStrategyFactory paymentStrategyFactory;
+    private final ApplicationEventPublisher eventPublisher;
+
+    @Lazy
+    @Autowired
+    private SaleServiceImpl self;
 
     public SaleServiceImpl(SaleRepository saleRepository,
                            SaleItemRepository saleItemRepository,
                            ProductRepository productRepository,
-                           InventoryRepository inventoryRepository,
+                           CategoryRepository categoryRepository,
                            BranchRepository branchRepository,
                            POSTerminalRepository posTerminalRepository,
                            PaymentTypeRepository paymentTypeRepository,
                            DiscountRuleRepository discountRuleRepository,
-<span class="fc" id="L43">                           PaymentStrategyFactory paymentStrategyFactory) {</span>
-<span class="fc" id="L44">        this.saleRepository = saleRepository;</span>
-<span class="fc" id="L45">        this.saleItemRepository = saleItemRepository;</span>
-<span class="fc" id="L46">        this.productRepository = productRepository;</span>
-<span class="fc" id="L47">        this.inventoryRepository = inventoryRepository;</span>
-<span class="fc" id="L48">        this.branchRepository = branchRepository;</span>
-<span class="fc" id="L49">        this.posTerminalRepository = posTerminalRepository;</span>
-<span class="fc" id="L50">        this.paymentTypeRepository = paymentTypeRepository;</span>
-<span class="fc" id="L51">        this.discountRuleRepository = discountRuleRepository;</span>
-<span class="fc" id="L52">        this.paymentStrategyFactory = paymentStrategyFactory;</span>
-<span class="fc" id="L53">    }</span>
+                           PaymentStrategyFactory paymentStrategyFactory,
+<span class="fc" id="L51">                           ApplicationEventPublisher eventPublisher) {</span>
+<span class="fc" id="L52">        this.saleRepository = saleRepository;</span>
+<span class="fc" id="L53">        this.saleItemRepository = saleItemRepository;</span>
+<span class="fc" id="L54">        this.productRepository = productRepository;</span>
+<span class="fc" id="L55">        this.categoryRepository = categoryRepository;</span>
+<span class="fc" id="L56">        this.branchRepository = branchRepository;</span>
+<span class="fc" id="L57">        this.posTerminalRepository = posTerminalRepository;</span>
+<span class="fc" id="L58">        this.paymentTypeRepository = paymentTypeRepository;</span>
+<span class="fc" id="L59">        this.discountRuleRepository = discountRuleRepository;</span>
+<span class="fc" id="L60">        this.paymentStrategyFactory = paymentStrategyFactory;</span>
+<span class="fc" id="L61">        this.eventPublisher = eventPublisher;</span>
+<span class="fc" id="L62">    }</span>
 
     @Override
-    @Transactional
     public SaleResponse createSale(SaleRequest request) {
-        // IDEMPOTENCY check
-<span class="fc" id="L59">        Optional&lt;Sale&gt; existingSale = saleRepository.findById(request.id());</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (existingSale.isPresent()) {</span>
-<span class="fc" id="L61">            return new SaleResponse(request.id(), &quot;stored&quot;);</span>
+        // Synchronize on UUID to ensure thread-safe idempotency check for the same sale ID
+<span class="fc" id="L67">        Object lock = saleLocks.computeIfAbsent(request.id(), k -&gt; new Object());</span>
+<span class="fc" id="L68">        synchronized (lock) {</span>
+            try {
+<span class="fc" id="L70">                return self.saveSaleTransactional(request);</span>
+            } finally {
+                // Cleaning up the lock map to prevent memory leak
+<span class="fc" id="L73">                saleLocks.remove(request.id());</span>
+            }
+        }
+    }
+
+    @Transactional
+    public SaleResponse saveSaleTransactional(SaleRequest request) {
+        // IDEMPOTENCY check: if same UUID exists → return existing (NO duplicate insert)
+<span class="fc" id="L81">        Optional&lt;Sale&gt; existingSale = saleRepository.findByUuid(request.id());</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (existingSale.isPresent()) {</span>
+<span class="fc" id="L83">            return new SaleResponse(request.id(), &quot;already_exists&quot;);</span>
         }
 
-<span class="fc" id="L64">        Branch branch = branchRepository.findById(request.branch_id())</span>
-<span class="pc" id="L65">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Invalid branch ID&quot;));</span>
-<span class="fc" id="L66">        POSTerminal pos = posTerminalRepository.findById(request.pos_id())</span>
-<span class="pc" id="L67">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Invalid POS ID&quot;));</span>
-<span class="fc" id="L68">        PaymentType paymentType = paymentTypeRepository.findById(request.payment_type_id())</span>
-<span class="pc" id="L69">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Invalid payment type ID&quot;));</span>
+<span class="fc" id="L86">        Branch branch = branchRepository.findById(request.branch_id())</span>
+<span class="pc" id="L87">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Branch not found: &quot; + request.branch_id()));</span>
 
-<span class="fc" id="L71">        Sale sale = new Sale();</span>
-<span class="fc" id="L72">        sale.setId(request.id());</span>
-<span class="fc" id="L73">        sale.setBranch(branch);</span>
-<span class="fc" id="L74">        sale.setPosTerminal(pos);</span>
-<span class="fc" id="L75">        sale.setPaymentType(paymentType);</span>
-<span class="fc" id="L76">        sale.setTotalAmount(request.total_amount());</span>
-<span class="fc" id="L77">        sale.setCreatedAt(LocalDateTime.now());</span>
-<span class="fc" id="L78">        sale.setSynced(false);</span>
+<span class="fc" id="L89">        POSTerminal pos = posTerminalRepository.findById(request.pos_id())</span>
+<span class="pc" id="L90">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;POS not found: &quot; + request.pos_id()));</span>
 
-<span class="fc" id="L80">        List&lt;SaleItem&gt; items = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (SaleItemRequest itemReq : request.items()) {</span>
-            // Pessimistic inventory lock
-<span class="fc" id="L83">            Inventory inventory = inventoryRepository.findWithLock(branch.getId(), itemReq.product_id())</span>
-<span class="fc" id="L84">                    .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found in this branch inventory: &quot; + itemReq.product_id()));</span>
+<span class="fc" id="L92">        PaymentType paymentType = paymentTypeRepository.findById(request.payment_type_id())</span>
+<span class="pc" id="L93">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Payment type not found: &quot; + request.payment_type_id()));</span>
 
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if (inventory.getQuantity() &lt; itemReq.quantity()) {</span>
-<span class="nc" id="L87">                throw new InsufficientStockException(&quot;Insufficient stock for product: &quot; + itemReq.product_id());</span>
+<span class="fc" id="L95">        Sale sale = new Sale();</span>
+<span class="fc" id="L96">        sale.setId(request.id());</span>
+<span class="fc" id="L97">        sale.setBranch(branch);</span>
+<span class="fc" id="L98">        sale.setPosTerminal(pos);</span>
+<span class="fc" id="L99">        sale.setPaymentType(paymentType);</span>
+<span class="fc" id="L100">        sale.setTotalAmount(request.total_amount());</span>
+<span class="fc" id="L101">        sale.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L102">        sale.setSynced(false);</span>
+
+<span class="fc" id="L104">        List&lt;SaleItem&gt; items = request.items().stream().map(itemReq -&gt; {</span>
+<span class="fc" id="L105">            Product product = productRepository.findById(itemReq.product_id())</span>
+<span class="pc" id="L106">                    .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Product not found: &quot; + itemReq.product_id()));</span>
+
+<span class="fc" id="L108">            SaleItem item = new SaleItem();</span>
+<span class="fc" id="L109">            item.setSale(sale);</span>
+<span class="fc" id="L110">            item.setProduct(product);</span>
+<span class="fc" id="L111">            item.setQuantity(itemReq.quantity());</span>
+<span class="fc" id="L112">            item.setPrice(itemReq.price());</span>
+<span class="fc" id="L113">            item.setDiscountAmount(itemReq.discount_amount());</span>
+
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">            if (itemReq.discount_rule_id() != null) {</span>
+<span class="nc" id="L116">                DiscountRule rule = discountRuleRepository.findById(itemReq.discount_rule_id())</span>
+<span class="nc" id="L117">                        .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rule not found: &quot; + itemReq.discount_rule_id()));</span>
+<span class="nc" id="L118">                item.setDiscountRule(rule);</span>
             }
+<span class="fc" id="L120">            return item;</span>
+<span class="fc" id="L121">        }).toList();</span>
 
-            // Deduct stock
-<span class="fc" id="L91">            inventory.setQuantity(inventory.getQuantity() - itemReq.quantity());</span>
-<span class="fc" id="L92">            inventoryRepository.save(inventory);</span>
-
-<span class="fc" id="L94">            Product product = productRepository.findById(itemReq.product_id())</span>
-<span class="pc" id="L95">                    .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found: &quot; + itemReq.product_id()));</span>
-
-<span class="fc" id="L97">            SaleItem item = new SaleItem();</span>
-<span class="fc" id="L98">            item.setSale(sale);</span>
-<span class="fc" id="L99">            item.setProduct(product);</span>
-<span class="fc" id="L100">            item.setQuantity(itemReq.quantity());</span>
-<span class="fc" id="L101">            item.setPrice(itemReq.price());</span>
-<span class="fc" id="L102">            item.setDiscountAmount(itemReq.discount_amount());</span>
-
-<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (itemReq.discount_rule_id() != null) {</span>
-<span class="fc" id="L105">                DiscountRule rule = discountRuleRepository.findById(itemReq.discount_rule_id())</span>
-<span class="pc" id="L106">                        .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Invalid discount rule ID&quot;));</span>
-<span class="nc" id="L107">                item.setDiscountRule(rule);</span>
-            }
-<span class="fc" id="L109">            items.add(item);</span>
-<span class="fc" id="L110">        }</span>
-
-<span class="fc" id="L112">        sale.setItems(items);</span>
-<span class="fc" id="L113">        saleRepository.save(sale);</span>
+<span class="fc" id="L123">        sale.setItems(items);</span>
+<span class="fc" id="L124">        saleRepository.save(sale);</span>
 
         // Process payment via Strategy
-<span class="fc" id="L116">        PaymentStrategy strategy = paymentStrategyFactory.getStrategy(paymentType.getName());</span>
-<span class="fc" id="L117">        strategy.process(new PaymentRequest(request.total_amount(), &quot;Sale ID: &quot; + request.id()));</span>
+<span class="fc" id="L127">        PaymentStrategy strategy = paymentStrategyFactory.getStrategy(paymentType.getName());</span>
+<span class="fc" id="L128">        strategy.process(new PaymentRequest(request.total_amount(), &quot;Sale ID: &quot; + request.id()));</span>
 
-<span class="fc" id="L119">        return new SaleResponse(sale.getId(), &quot;stored&quot;);</span>
+        // Emit SaleCreatedEvent (Observer Pattern)
+<span class="fc" id="L131">        eventPublisher.publishEvent(new SaleCreatedEvent(this, sale));</span>
+
+<span class="fc" id="L133">        return new SaleResponse(sale.getId(), &quot;created&quot;);</span>
     }
 
     @Override
     public Sale getSaleById(UUID id) {
-<span class="nc" id="L124">        return saleRepository.findById(id)</span>
-<span class="nc" id="L125">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Sale not found: &quot; + id));</span>
+<span class="nc" id="L138">        return saleRepository.findByUuid(id)</span>
+<span class="nc" id="L139">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Sale not found: &quot; + id));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

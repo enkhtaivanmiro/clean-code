@@ -12,7 +12,10 @@ public class SaleItem {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = &quot;sale_id&quot;, nullable = false)
+    @JoinColumns({
+        @JoinColumn(name = &quot;sale_id&quot;, referencedColumnName = &quot;id&quot;, nullable = false),
+        @JoinColumn(name = &quot;sale_created_at&quot;, referencedColumnName = &quot;created_at&quot;, nullable = false)
+    })
     private Sale sale;
 
     @ManyToOne
@@ -29,24 +32,24 @@ public class SaleItem {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
-<span class="fc" id="L32">    @Column(name = &quot;discount_amount&quot;, precision = 12, scale = 2)</span>
+<span class="fc" id="L35">    @Column(name = &quot;discount_amount&quot;, precision = 12, scale = 2)</span>
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
-<span class="fc" id="L35">    public SaleItem() {}</span>
+<span class="fc" id="L38">    public SaleItem() {}</span>
 
-<span class="fc" id="L37">    public Integer getId() { return id; }</span>
-<span class="fc" id="L38">    public void setId(Integer id) { this.id = id; }</span>
-<span class="fc" id="L39">    public Sale getSale() { return sale; }</span>
-<span class="fc" id="L40">    public void setSale(Sale sale) { this.sale = sale; }</span>
-<span class="fc" id="L41">    public Product getProduct() { return product; }</span>
-<span class="fc" id="L42">    public void setProduct(Product product) { this.product = product; }</span>
-<span class="fc" id="L43">    public DiscountRule getDiscountRule() { return discountRule; }</span>
-<span class="fc" id="L44">    public void setDiscountRule(DiscountRule discountRule) { this.discountRule = discountRule; }</span>
-<span class="fc" id="L45">    public Integer getQuantity() { return quantity; }</span>
-<span class="fc" id="L46">    public void setQuantity(Integer quantity) { this.quantity = quantity; }</span>
-<span class="fc" id="L47">    public BigDecimal getPrice() { return price; }</span>
-<span class="fc" id="L48">    public void setPrice(BigDecimal price) { this.price = price; }</span>
-<span class="fc" id="L49">    public BigDecimal getDiscountAmount() { return discountAmount; }</span>
-<span class="fc" id="L50">    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }</span>
+<span class="fc" id="L40">    public Integer getId() { return id; }</span>
+<span class="fc" id="L41">    public void setId(Integer id) { this.id = id; }</span>
+<span class="fc" id="L42">    public Sale getSale() { return sale; }</span>
+<span class="fc" id="L43">    public void setSale(Sale sale) { this.sale = sale; }</span>
+<span class="fc" id="L44">    public Product getProduct() { return product; }</span>
+<span class="fc" id="L45">    public void setProduct(Product product) { this.product = product; }</span>
+<span class="fc" id="L46">    public DiscountRule getDiscountRule() { return discountRule; }</span>
+<span class="fc" id="L47">    public void setDiscountRule(DiscountRule discountRule) { this.discountRule = discountRule; }</span>
+<span class="fc" id="L48">    public Integer getQuantity() { return quantity; }</span>
+<span class="fc" id="L49">    public void setQuantity(Integer quantity) { this.quantity = quantity; }</span>
+<span class="fc" id="L50">    public BigDecimal getPrice() { return price; }</span>
+<span class="fc" id="L51">    public void setPrice(BigDecimal price) { this.price = price; }</span>
+<span class="fc" id="L52">    public BigDecimal getDiscountAmount() { return discountAmount; }</span>
+<span class="fc" id="L53">    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

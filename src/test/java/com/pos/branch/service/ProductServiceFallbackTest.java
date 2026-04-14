@@ -5,7 +5,6 @@ import com.pos.branch.exception.ProductNotFoundException;
 import com.pos.branch.model.Barcode;
 import com.pos.branch.model.Category;
 import com.pos.branch.model.Product;
-import com.pos.branch.pattern.observer.PriceChangePublisher;
 import com.pos.branch.repository.BarcodeRepository;
 import com.pos.branch.repository.ProductPriceRepository;
 import com.pos.branch.repository.ProductRepository;
@@ -13,9 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,12 +32,12 @@ class ProductServiceFallbackTest {
     @Mock
     private ProductPriceRepository productPriceRepository;
     @Mock
-    private PriceChangePublisher priceChangePublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        productService = new ProductServiceImpl(productRepository, barcodeRepository, productPriceRepository, priceChangePublisher);
+        productService = new ProductServiceImpl(productRepository, barcodeRepository, productPriceRepository, eventPublisher);
     }
 
     @Test
@@ -54,6 +53,7 @@ class ProductServiceFallbackTest {
         Barcode barcode = new Barcode();
         barcode.setCode(code);
         barcode.setProduct(product);
+        product.setBarcodes(java.util.Collections.singletonList(barcode));
 
         when(barcodeRepository.findByCode(code)).thenReturn(Optional.of(barcode));
         when(productPriceRepository.findLatestByProductId(1)).thenReturn(Optional.empty());
@@ -74,6 +74,7 @@ class ProductServiceFallbackTest {
         Category category = new Category();
         category.setName("Food");
         product.setCategory(category);
+        product.setBarcodes(java.util.Collections.emptyList());
 
         when(barcodeRepository.findByCode(query)).thenReturn(Optional.empty());
         when(productRepository.findFirstByNameContainingIgnoreCase(query)).thenReturn(Optional.of(product));
@@ -94,6 +95,7 @@ class ProductServiceFallbackTest {
         Category category = new Category();
         category.setName("Fruit");
         product.setCategory(category);
+        product.setBarcodes(java.util.Collections.emptyList());
 
         when(barcodeRepository.findByCode(query)).thenReturn(Optional.empty());
         when(productRepository.findFirstByNameContainingIgnoreCase(query)).thenReturn(Optional.empty());

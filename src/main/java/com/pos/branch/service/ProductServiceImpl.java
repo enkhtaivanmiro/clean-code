@@ -1,15 +1,15 @@
 package com.pos.branch.service;
 
 import com.pos.branch.dto.ProductResponse;
+import com.pos.branch.event.PriceUpdatedEvent;
 import com.pos.branch.exception.ProductNotFoundException;
 import com.pos.branch.model.Barcode;
 import com.pos.branch.model.Product;
 import com.pos.branch.model.ProductPrice;
-import com.pos.branch.pattern.observer.PriceChangeEvent;
-import com.pos.branch.pattern.observer.PriceChangePublisher;
 import com.pos.branch.repository.BarcodeRepository;
 import com.pos.branch.repository.ProductPriceRepository;
 import com.pos.branch.repository.ProductRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -24,16 +26,16 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final BarcodeRepository barcodeRepository;
     private final ProductPriceRepository productPriceRepository;
-    private final PriceChangePublisher priceChangePublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ProductServiceImpl(ProductRepository productRepository, 
                               BarcodeRepository barcodeRepository, 
                               ProductPriceRepository productPriceRepository,
-                              PriceChangePublisher priceChangePublisher) {
+                              ApplicationEventPublisher eventPublisher) {
         this.productRepository = productRepository;
         this.barcodeRepository = barcodeRepository;
         this.productPriceRepository = productPriceRepository;
-        this.priceChangePublisher = priceChangePublisher;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -58,7 +60,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         BigDecimal price = getLatestPrice(product.getId());
-        return mapToResponse(product, barcodeCode, price);
+        String actualBarcode = product.getBarcodes().isEmpty() ? barcodeCode : product.getBarcodes().get(0).getCode();
+        return mapToResponse(product, actualBarcode, price);
     }
 
     @Override
@@ -76,15 +79,25 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found: " + productId));
         
-        BigDecimal oldPrice = getLatestPrice(productId);
-        
         ProductPrice productPrice = new ProductPrice();
         productPrice.setProduct(product);
         productPrice.setPrice(newPrice);
         productPrice.setUpdatedAt(LocalDateTime.now());
         productPriceRepository.save(productPrice);
         
-        priceChangePublisher.notifyObservers(new PriceChangeEvent(productId, oldPrice, newPrice, LocalDateTime.now()));
+        // Emit Spring Event (Observer Pattern)
+        eventPublisher.publishEvent(new PriceUpdatedEvent(this, productId, newPrice));
+    }
+
+    @Override
+    public List<ProductResponse> getUpdatedProducts(LocalDateTime since) {
+        return productPriceRepository.findByUpdatedAtAfter(since).stream()
+                .map(pp -> {
+                    Product p = pp.getProduct();
+                    String barcode = p.getBarcodes().isEmpty() ? null : p.getBarcodes().get(0).getCode();
+                    return mapToResponse(p, barcode, pp.getPrice());
+                })
+                .collect(Collectors.toList());
     }
 
     private BigDecimal getLatestPrice(Integer productId) {

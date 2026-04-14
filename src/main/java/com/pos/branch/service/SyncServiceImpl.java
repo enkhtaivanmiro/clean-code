@@ -33,7 +33,7 @@ public class SyncServiceImpl implements SyncService {
         for (SaleRequest saleReq : request.sales()) {
             UUID saleId = saleReq.id();
             try {
-                Sale sale = saleRepository.findById(saleId).orElse(null);
+                Sale sale = saleRepository.findByUuid(saleId).orElse(null);
                 if (sale != null && !sale.getSynced()) {
                     sale.setSynced(true);
                     saleRepository.save(sale);

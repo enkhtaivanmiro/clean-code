@@ -8,9 +8,14 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "sales")
+@IdClass(SaleId.class)
 public class Sale {
     @Id
     private UUID id;
+
+    @Id
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "branch_id", nullable = false)
@@ -26,9 +31,6 @@ public class Sale {
 
     @Column(name = "total_amount", nullable = false, precision = 14, scale = 2)
     private BigDecimal totalAmount;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
     private Boolean synced = false;

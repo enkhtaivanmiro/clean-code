@@ -38,7 +38,7 @@ public class SyncServiceTest {
         SaleRequest saleReq = new SaleRequest(saleId, 1, 1, 1, List.of(), java.math.BigDecimal.ZERO);
         SyncRequest syncRequest = new SyncRequest(1, List.of(saleReq));
 
-        when(saleRepository.findById(saleId)).thenReturn(Optional.of(sale));
+        when(saleRepository.findByUuid(saleId)).thenReturn(Optional.of(sale));
 
         CompletableFuture<SyncResponse> future = syncService.syncSales(syncRequest);
         SyncResponse response = future.get();

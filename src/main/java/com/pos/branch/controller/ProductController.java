@@ -47,4 +47,11 @@ public class ProductController {
         productService.updateProductPrice(id, price);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/updates")
+    @Operation(summary = "Get updated prices", description = "Returns a list of products with prices updated since the given timestamp")
+    public ResponseEntity<java.util.List<ProductResponse>> getUpdatedProducts(@RequestParam String since) {
+        java.time.LocalDateTime timestamp = java.time.LocalDateTime.parse(since);
+        return ResponseEntity.ok(productService.getUpdatedProducts(timestamp));
+    }
 }
