@@ -1,11 +1,13 @@
 com/pos/branch/pattern/observer/PriceChangePublisherTest.class
-com/pos/branch/controller/SaleControllerTest.class
 com/pos/branch/service/ProductServiceTest.class
 com/pos/branch/pattern/observer/ObserverImplTest.class
 com/pos/branch/pattern/strategy/PaymentStrategyFactoryTest.class
 com/pos/branch/pattern/strategy/StrategyTest.class
-com/pos/branch/service/SaleServiceTest.class
 com/pos/branch/service/ConcurrencyIntegrationTest.class
 com/pos/branch/service/SyncServiceTest.class
 com/pos/branch/model/ModelTest.class
+com/pos/branch/service/ProductServiceFallbackTest.class
+com/pos/branch/service/ScheduledTaskServiceTest.class
+com/pos/branch/controller/SaleControllerTest.class
+com/pos/branch/service/SaleServiceTest.class
 com/pos/branch/exception/ExceptionTest.class

@@ -19,6 +19,7 @@
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/controller/SaleController.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/pattern/observer/PriceChangePublisher.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/service/SyncService.java
+/Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/service/ScheduledTaskService.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/repository/SaleRepository.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/controller/ProductController.java
 /Users/enkhtaivanbyambajav/Downloads/clean-code/pos-branch-server/src/main/java/com/pos/branch/model/SaleItem.java

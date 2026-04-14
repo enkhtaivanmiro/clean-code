@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface SaleRepository extends JpaRepository<Sale, UUID> {
     List<Sale> findByBranchIdAndSyncedFalse(Integer branchId);
+    List<Sale> findBySyncedFalse();
+    void deleteByCreatedAtBefore(java.time.LocalDateTime date);
 }

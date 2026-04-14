@@ -38,47 +38,63 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getProductByBarcode(String barcodeCode) {
-<span class="fc" id="L41">        Barcode barcode = barcodeRepository.findByCode(barcodeCode)</span>
-<span class="fc" id="L42">                .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found for barcode: &quot; + barcodeCode));</span>
-<span class="fc" id="L43">        Product product = barcode.getProduct();</span>
-<span class="fc" id="L44">        BigDecimal price = getLatestPrice(product.getId());</span>
-<span class="fc" id="L45">        return mapToResponse(product, barcodeCode, price);</span>
+        // 1. Try barcode lookup
+<span class="fc" id="L42">        Product product = barcodeRepository.findByCode(barcodeCode)</span>
+<span class="fc" id="L43">                .map(Barcode::getProduct)</span>
+<span class="fc" id="L44">                .orElse(null);</span>
+
+        // 2. Fallback to name search
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (product == null) {</span>
+<span class="fc" id="L48">            product = productRepository.findFirstByNameContainingIgnoreCase(barcodeCode).orElse(null);</span>
+        }
+
+        // 3. Fallback to category search
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (product == null) {</span>
+<span class="fc" id="L53">            product = productRepository.findFirstByCategoryName(barcodeCode).orElse(null);</span>
+        }
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (product == null) {</span>
+<span class="fc" id="L57">            throw new ProductNotFoundException(&quot;Product not found for barcode or search criteria: &quot; + barcodeCode);</span>
+        }
+
+<span class="fc" id="L60">        BigDecimal price = getLatestPrice(product.getId());</span>
+<span class="fc" id="L61">        return mapToResponse(product, barcodeCode, price);</span>
     }
 
     @Override
     public Page&lt;ProductResponse&gt; searchProducts(String query, String category, Pageable pageable) {
-<span class="nc" id="L50">        return productRepository.searchProducts(query, category, pageable)</span>
-<span class="nc" id="L51">                .map(p -&gt; {</span>
-<span class="nc bnc" id="L52" title="All 2 branches missed.">                    String barcode = p.getBarcodes().isEmpty() ? null : p.getBarcodes().get(0).getCode();</span>
-<span class="nc" id="L53">                    return mapToResponse(p, barcode, getLatestPrice(p.getId()));</span>
+<span class="nc" id="L66">        return productRepository.searchProducts(query, category, pageable)</span>
+<span class="nc" id="L67">                .map(p -&gt; {</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                    String barcode = p.getBarcodes().isEmpty() ? null : p.getBarcodes().get(0).getCode();</span>
+<span class="nc" id="L69">                    return mapToResponse(p, barcode, getLatestPrice(p.getId()));</span>
                 });
     }
 
     @Override
     @Transactional
     public void updateProductPrice(Integer productId, BigDecimal newPrice) {
-<span class="nc" id="L60">        Product product = productRepository.findById(productId)</span>
-<span class="nc" id="L61">                .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found: &quot; + productId));</span>
+<span class="nc" id="L76">        Product product = productRepository.findById(productId)</span>
+<span class="nc" id="L77">                .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found: &quot; + productId));</span>
         
-<span class="nc" id="L63">        BigDecimal oldPrice = getLatestPrice(productId);</span>
+<span class="nc" id="L79">        BigDecimal oldPrice = getLatestPrice(productId);</span>
         
-<span class="nc" id="L65">        ProductPrice productPrice = new ProductPrice();</span>
-<span class="nc" id="L66">        productPrice.setProduct(product);</span>
-<span class="nc" id="L67">        productPrice.setPrice(newPrice);</span>
-<span class="nc" id="L68">        productPrice.setUpdatedAt(LocalDateTime.now());</span>
-<span class="nc" id="L69">        productPriceRepository.save(productPrice);</span>
+<span class="nc" id="L81">        ProductPrice productPrice = new ProductPrice();</span>
+<span class="nc" id="L82">        productPrice.setProduct(product);</span>
+<span class="nc" id="L83">        productPrice.setPrice(newPrice);</span>
+<span class="nc" id="L84">        productPrice.setUpdatedAt(LocalDateTime.now());</span>
+<span class="nc" id="L85">        productPriceRepository.save(productPrice);</span>
         
-<span class="nc" id="L71">        priceChangePublisher.notifyObservers(new PriceChangeEvent(productId, oldPrice, newPrice, LocalDateTime.now()));</span>
-<span class="nc" id="L72">    }</span>
+<span class="nc" id="L87">        priceChangePublisher.notifyObservers(new PriceChangeEvent(productId, oldPrice, newPrice, LocalDateTime.now()));</span>
+<span class="nc" id="L88">    }</span>
 
     private BigDecimal getLatestPrice(Integer productId) {
-<span class="fc" id="L75">        return productPriceRepository.findLatestByProductId(productId)</span>
-<span class="fc" id="L76">                .map(ProductPrice::getPrice)</span>
-<span class="fc" id="L77">                .orElse(BigDecimal.ZERO);</span>
+<span class="fc" id="L91">        return productPriceRepository.findLatestByProductId(productId)</span>
+<span class="fc" id="L92">                .map(ProductPrice::getPrice)</span>
+<span class="fc" id="L93">                .orElse(BigDecimal.ZERO);</span>
     }
 
     private ProductResponse mapToResponse(Product p, String barcode, BigDecimal price) {
-<span class="fc" id="L81">        return new ProductResponse(p.getId(), p.getName(), barcode, price, p.getCategory().getName());</span>
+<span class="fc" id="L97">        return new ProductResponse(p.getId(), p.getName(), barcode, price, p.getCategory().getName());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -38,9 +38,25 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getProductByBarcode(String barcodeCode) {
-        Barcode barcode = barcodeRepository.findByCode(barcodeCode)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found for barcode: " + barcodeCode));
-        Product product = barcode.getProduct();
+        // 1. Try barcode lookup
+        Product product = barcodeRepository.findByCode(barcodeCode)
+                .map(Barcode::getProduct)
+                .orElse(null);
+
+        // 2. Fallback to name search
+        if (product == null) {
+            product = productRepository.findFirstByNameContainingIgnoreCase(barcodeCode).orElse(null);
+        }
+
+        // 3. Fallback to category search
+        if (product == null) {
+            product = productRepository.findFirstByCategoryName(barcodeCode).orElse(null);
+        }
+
+        if (product == null) {
+            throw new ProductNotFoundException("Product not found for barcode or search criteria: " + barcodeCode);
+        }
+
         BigDecimal price = getLatestPrice(product.getId());
         return mapToResponse(product, barcodeCode, price);
     }

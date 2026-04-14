@@ -5,6 +5,7 @@ com/pos/branch/controller/ProductController.class
 com/pos/branch/pattern/strategy/PaymentRequest.class
 com/pos/branch/exception/ProductNotFoundException.class
 com/pos/branch/repository/PaymentTypeRepository.class
+com/pos/branch/service/ScheduledTaskService.class
 com/pos/branch/service/ProductService.class
 com/pos/branch/exception/GlobalExceptionHandler.class
 com/pos/branch/dto/SyncResponse.class

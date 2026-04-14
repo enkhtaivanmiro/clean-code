@@ -18,9 +18,10 @@ branch-server,com.pos.branch.dto,SaleRequest,0,21,0,0,0,1,0,1,0,1
 branch-server,com.pos.branch,BranchServerApplication,5,3,0,0,2,1,1,1,1,1
 branch-server,com.pos.branch.config,ThreadPoolConfig,0,23,0,0,0,8,0,2,0,2
 branch-server,com.pos.branch.config,OpenAPIConfig,0,17,0,0,0,6,0,2,0,2
+branch-server,com.pos.branch.service,ScheduledTaskService,6,74,0,4,2,23,0,6,0,4
 branch-server,com.pos.branch.service,SyncServiceImpl,5,59,2,4,2,15,2,3,0,2
 branch-server,com.pos.branch.service,SaleServiceImpl,51,241,1,7,4,53,7,7,6,4
-branch-server,com.pos.branch.service,ProductServiceImpl,80,67,2,0,14,15,5,5,4,5
+branch-server,com.pos.branch.service,ProductServiceImpl,80,87,2,6,14,21,5,7,4,4
 branch-server,com.pos.branch.model,PaymentType,0,17,0,0,0,5,0,5,0,5
 branch-server,com.pos.branch.model,DiscountRule,0,42,0,0,0,13,0,11,0,11
 branch-server,com.pos.branch.model,SaleItem,0,55,0,0,0,16,0,15,0,15
